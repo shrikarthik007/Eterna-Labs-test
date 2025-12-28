@@ -3,3 +3,5 @@ export { TokenRow, TokenRowSkeleton } from './TokenRow';
 export { ColumnHeader } from './ColumnHeader';
 export { TokenColumn } from './TokenColumn';
 export { PulseGrid } from './PulseGrid';
+export { TokenDetailModal } from './TokenDetailModal';
+

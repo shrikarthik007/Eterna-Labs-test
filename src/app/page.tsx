@@ -1,15 +1,21 @@
 'use client';
 
 import * as React from 'react';
-import { PulseGrid } from '@/components/organisms';
+import { PulseGrid, TokenDetailModal } from '@/components/organisms';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setTokens, setLoading, batchUpdatePrices, setConnectionStatus } from '@/store/slices/tokensSlice';
+import {
+  setTokens,
+  setLoading,
+  batchUpdatePrices,
+  setConnectionStatus,
+  setSelectedToken
+} from '@/store/slices/tokensSlice';
 import { generateInitialTokens, webSocketMock } from '@/lib/websocket-mock';
 import type { Token } from '@/types';
 
 export default function Home() {
   const dispatch = useAppDispatch();
-  const { connectionStatus } = useAppSelector((state) => state.tokens);
+  const { connectionStatus, selectedToken } = useAppSelector((state) => state.tokens);
   const [isClient, setIsClient] = React.useState(false);
 
   // Initialize mock data on mount
@@ -51,10 +57,17 @@ export default function Home() {
     return unsubscribe;
   }, [dispatch]);
 
+  // Handle token click - open modal
   const handleTokenClick = React.useCallback((token: Token) => {
-    console.log('Token clicked:', token);
-    // TODO: Open token detail modal
-  }, []);
+    dispatch(setSelectedToken(token));
+  }, [dispatch]);
+
+  // Handle modal close
+  const handleModalClose = React.useCallback((open: boolean) => {
+    if (!open) {
+      dispatch(setSelectedToken(null));
+    }
+  }, [dispatch]);
 
   // Prevent hydration mismatch
   if (!isClient) {
@@ -74,10 +87,10 @@ export default function Home() {
           <div className="flex items-center gap-1.5">
             <span
               className={`h-2 w-2 rounded-full ${connectionStatus === 'connected'
-                  ? 'bg-success animate-pulse'
-                  : connectionStatus === 'connecting'
-                    ? 'bg-warning animate-pulse'
-                    : 'bg-muted-foreground'
+                ? 'bg-success animate-pulse'
+                : connectionStatus === 'connecting'
+                  ? 'bg-warning animate-pulse'
+                  : 'bg-muted-foreground'
                 }`}
             />
             <span className="text-xs text-muted-foreground capitalize">
@@ -94,6 +107,13 @@ export default function Home() {
       <main className="flex-1 overflow-hidden">
         <PulseGrid onTokenClick={handleTokenClick} />
       </main>
+
+      {/* Token Detail Modal */}
+      <TokenDetailModal
+        token={selectedToken}
+        open={selectedToken !== null}
+        onOpenChange={handleModalClose}
+      />
     </div>
   );
 }

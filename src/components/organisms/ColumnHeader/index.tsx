@@ -1,16 +1,24 @@
 'use client';
 
 import * as React from 'react';
-import { Zap, SlidersHorizontal, List } from 'lucide-react';
+import { Zap, SlidersHorizontal, List, ArrowUpDown, ArrowUp, ArrowDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { TokenCategory } from '@/types';
+import type { TokenCategory, SortOption, SortOrder } from '@/types';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setActivePreset } from '@/store/slices/tokensSlice';
+import { setActivePreset, setSortConfig } from '@/store/slices/tokensSlice';
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { getSortLabel, SORT_OPTIONS } from '@/hooks/useSortedTokens';
 
 interface ColumnHeaderProps {
     title: string;
@@ -25,7 +33,7 @@ const presets: PresetType[] = ['P1', 'P2', 'P3'];
 
 /**
  * ColumnHeader component for the token discovery table columns.
- * Displays title, activity indicator, preset buttons, and filter icon.
+ * Displays title, activity indicator, preset buttons, sort dropdown, and filter icon.
  */
 export const ColumnHeader = React.memo<ColumnHeaderProps>(({
     title,
@@ -38,10 +46,24 @@ export const ColumnHeader = React.memo<ColumnHeaderProps>(({
     const activePreset = useAppSelector(
         (state) => state.tokens.activePresets[category]
     );
+    const sortConfig = useAppSelector(
+        (state) => state.tokens.sortConfig[category]
+    );
 
     const handlePresetClick = React.useCallback((preset: PresetType) => {
         dispatch(setActivePreset({ category, preset }));
     }, [dispatch, category]);
+
+    const handleSortChange = React.useCallback((sortBy: SortOption) => {
+        // If same field, toggle order; otherwise use desc
+        const newOrder: SortOrder =
+            sortConfig.sortBy === sortBy
+                ? sortConfig.sortOrder === 'asc' ? 'desc' : 'asc'
+                : 'desc';
+        dispatch(setSortConfig({ category, sortBy, sortOrder: newOrder }));
+    }, [dispatch, category, sortConfig]);
+
+    const SortIcon = sortConfig.sortOrder === 'asc' ? ArrowUp : ArrowDown;
 
     return (
         <div
@@ -72,6 +94,46 @@ export const ColumnHeader = React.memo<ColumnHeaderProps>(({
                     <Zap className="h-3 w-3" />
                     <span>{activityCount}</span>
                 </div>
+
+                {/* Sort Dropdown */}
+                <DropdownMenu>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    className={cn(
+                                        'flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors',
+                                        'text-[10px] font-medium',
+                                        'bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary'
+                                    )}
+                                >
+                                    <SortIcon className="h-3 w-3" />
+                                    <span>{getSortLabel(sortConfig.sortBy)}</span>
+                                </button>
+                            </DropdownMenuTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                            <p>Sort by</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    <DropdownMenuContent align="end" className="w-36">
+                        {SORT_OPTIONS.map((option) => (
+                            <DropdownMenuItem
+                                key={option}
+                                onClick={() => handleSortChange(option)}
+                                className="flex items-center justify-between text-xs"
+                            >
+                                <span>{getSortLabel(option)}</span>
+                                {sortConfig.sortBy === option && (
+                                    <div className="flex items-center gap-1">
+                                        <SortIcon className="h-3 w-3 text-primary" />
+                                        <Check className="h-3 w-3 text-primary" />
+                                    </div>
+                                )}
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
 
                 {/* Preset Buttons */}
                 <div className="flex items-center rounded bg-secondary/50 p-0.5">

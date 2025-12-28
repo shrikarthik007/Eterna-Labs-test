@@ -21,6 +21,7 @@ interface TokensState {
         [K in TokenCategory]: 'P1' | 'P2' | 'P3';
     };
     lastUpdated: number | null;
+    selectedToken: Token | null;
 }
 
 const initialState: TokensState = {
@@ -41,6 +42,7 @@ const initialState: TokensState = {
         'migrated': 'P1',
     },
     lastUpdated: null,
+    selectedToken: null,
 };
 
 /**
@@ -173,6 +175,11 @@ export const tokensSlice = createSlice({
             state.lastUpdated = Date.now();
         },
 
+        // Set selected token for modal
+        setSelectedToken: (state, action: PayloadAction<Token | null>) => {
+            state.selectedToken = action.payload;
+        },
+
         // Reset all state
         resetState: () => initialState,
     },
@@ -189,7 +196,9 @@ export const {
     setActivePreset,
     addToken,
     removeToken,
+    setSelectedToken,
     resetState,
 } = tokensSlice.actions;
 
 export default tokensSlice.reducer;
+

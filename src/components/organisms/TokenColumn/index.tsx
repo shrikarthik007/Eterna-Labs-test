@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import type { Token, TokenCategory } from '@/types';
 import { ColumnHeader } from '../ColumnHeader';
 import { TokenRow, TokenRowSkeleton } from '../TokenRow';
+import { useSortedTokens } from '@/hooks/useSortedTokens';
 
 interface TokenColumnProps {
     category: TokenCategory;
@@ -39,6 +40,9 @@ export const TokenColumn = React.memo<TokenColumnProps>(({
 }) => {
     const displayTitle = title || CATEGORY_TITLES[category];
 
+    // Use sorted tokens based on Redux sortConfig
+    const sortedTokens = useSortedTokens(tokens, category);
+
     return (
         <div
             className={cn(
@@ -64,7 +68,7 @@ export const TokenColumn = React.memo<TokenColumnProps>(({
                             <TokenRowSkeleton key={index} />
                         ))}
                     </div>
-                ) : tokens.length === 0 ? (
+                ) : sortedTokens.length === 0 ? (
                     // Empty state
                     <div className="flex flex-col items-center justify-center h-32 text-center px-4">
                         <p className="text-sm text-muted-foreground">
@@ -77,7 +81,7 @@ export const TokenColumn = React.memo<TokenColumnProps>(({
                 ) : (
                     // Token list
                     <div className="animate-fade-in">
-                        {tokens.map((token) => (
+                        {sortedTokens.map((token) => (
                             <TokenRow
                                 key={token.id}
                                 token={token}
@@ -92,3 +96,4 @@ export const TokenColumn = React.memo<TokenColumnProps>(({
 });
 
 TokenColumn.displayName = 'TokenColumn';
+
