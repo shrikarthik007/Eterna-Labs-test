@@ -34,7 +34,7 @@ export const PulseGrid = React.memo<PulseGridProps>(({
                 category="new-pairs"
                 title="New Pairs"
                 tokens={newPairs}
-                loading={loading}
+                loading={loading.newPairs}
                 activityCount={newPairs.length}
                 onTokenClick={onTokenClick}
             />
@@ -42,7 +42,7 @@ export const PulseGrid = React.memo<PulseGridProps>(({
                 category="final-stretch"
                 title="Final Stretch"
                 tokens={finalStretch}
-                loading={loading}
+                loading={loading.finalStretch}
                 activityCount={finalStretch.length}
                 onTokenClick={onTokenClick}
             />
@@ -50,7 +50,7 @@ export const PulseGrid = React.memo<PulseGridProps>(({
                 category="migrated"
                 title="Migrated"
                 tokens={migrated}
-                loading={loading}
+                loading={loading.migrated}
                 activityCount={migrated.length}
                 onTokenClick={onTokenClick}
             />

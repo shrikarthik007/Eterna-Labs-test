@@ -8,7 +8,11 @@ interface TokensState {
     newPairs: Token[];
     finalStretch: Token[];
     migrated: Token[];
-    loading: boolean;
+    loading: {
+        newPairs: boolean;
+        finalStretch: boolean;
+        migrated: boolean;
+    };
     error: string | null;
     connectionStatus: ConnectionStatus;
     sortConfig: {
@@ -21,6 +25,7 @@ interface TokensState {
         [K in TokenCategory]: 'P1' | 'P2' | 'P3';
     };
     lastUpdated: number | null;
+    lastConnectionTime: number | null;
     selectedToken: Token | null;
 }
 
@@ -28,7 +33,11 @@ const initialState: TokensState = {
     newPairs: [],
     finalStretch: [],
     migrated: [],
-    loading: false,
+    loading: {
+        newPairs: true,
+        finalStretch: true,
+        migrated: true,
+    },
     error: null,
     connectionStatus: 'disconnected',
     sortConfig: {
@@ -42,6 +51,7 @@ const initialState: TokensState = {
         'migrated': 'P1',
     },
     lastUpdated: null,
+    lastConnectionTime: null,
     selectedToken: null,
 };
 
@@ -64,15 +74,29 @@ export const tokensSlice = createSlice({
     name: 'tokens',
     initialState,
     reducers: {
-        // Set loading state
+        // Set loading state for all categories
         setLoading: (state, action: PayloadAction<boolean>) => {
-            state.loading = action.payload;
+            state.loading.newPairs = action.payload;
+            state.loading.finalStretch = action.payload;
+            state.loading.migrated = action.payload;
+        },
+
+        // Set loading state for a specific category
+        setCategoryLoading: (
+            state,
+            action: PayloadAction<{ category: TokenCategory; loading: boolean }>
+        ) => {
+            const { category, loading } = action.payload;
+            const key = getCategoryKey(category);
+            state.loading[key] = loading;
         },
 
         // Set error state
         setError: (state, action: PayloadAction<string | null>) => {
             state.error = action.payload;
-            state.loading = false;
+            state.loading.newPairs = false;
+            state.loading.finalStretch = false;
+            state.loading.migrated = false;
         },
 
         // Set tokens for a specific category
@@ -132,6 +156,9 @@ export const tokensSlice = createSlice({
         // Set connection status
         setConnectionStatus: (state, action: PayloadAction<ConnectionStatus>) => {
             state.connectionStatus = action.payload;
+            if (action.payload === 'connected') {
+                state.lastConnectionTime = Date.now();
+            }
         },
 
         // Update sort configuration for a category
@@ -187,6 +214,7 @@ export const tokensSlice = createSlice({
 
 export const {
     setLoading,
+    setCategoryLoading,
     setError,
     setTokens,
     updateTokenPrice,

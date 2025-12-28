@@ -97,6 +97,71 @@ export function generateInitialTokens(count: number = 15): {
 }
 
 /**
+ * Progressive token generation callback type
+ */
+type ProgressiveCallback = (
+    category: TokenCategory,
+    tokens: Token[],
+    isComplete: boolean
+) => void;
+
+/**
+ * Generate tokens progressively for a smooth loading experience.
+ * Tokens are generated in batches with staggered timing across categories.
+ * 
+ * @param countPerCategory - Number of tokens to generate per category
+ * @param onBatch - Callback fired for each batch of tokens
+ * @param batchSize - Number of tokens per batch (default: 4)
+ * @param delayMs - Delay between batches in milliseconds (default: 150)
+ * @returns Cleanup function to cancel pending operations
+ */
+export function generateProgressiveTokens(
+    countPerCategory: number = 12,
+    onBatch: ProgressiveCallback,
+    batchSize: number = 4,
+    delayMs: number = 150
+): () => void {
+    const timeouts: NodeJS.Timeout[] = [];
+    const categories: TokenCategory[] = ['new-pairs', 'final-stretch', 'migrated'];
+
+    // Stagger start time for each category
+    const categoryOffsets: Record<TokenCategory, number> = {
+        'new-pairs': 0,
+        'final-stretch': 100,
+        'migrated': 200,
+    };
+
+    categories.forEach((category) => {
+        const totalBatches = Math.ceil(countPerCategory / batchSize);
+        let generatedTokens: Token[] = [];
+
+        for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+            const batchStart = batchIndex * batchSize;
+            const batchEnd = Math.min(batchStart + batchSize, countPerCategory);
+            const tokensInBatch = batchEnd - batchStart;
+            const isLastBatch = batchIndex === totalBatches - 1;
+
+            const delay = categoryOffsets[category] + (batchIndex * delayMs);
+
+            const timeout = setTimeout(() => {
+                const newTokens = Array.from({ length: tokensInBatch }, () =>
+                    generateMockToken(category)
+                );
+                generatedTokens = [...generatedTokens, ...newTokens];
+                onBatch(category, [...generatedTokens], isLastBatch);
+            }, delay);
+
+            timeouts.push(timeout);
+        }
+    });
+
+    // Return cleanup function
+    return () => {
+        timeouts.forEach((timeout) => clearTimeout(timeout));
+    };
+}
+
+/**
  * Generate a price update for a token
  */
 export function generatePriceUpdate(token: Token): PriceUpdate {
