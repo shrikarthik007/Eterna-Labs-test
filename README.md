@@ -78,7 +78,7 @@ src/
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/etrnal-labs-test.git
+git clone https://github.com/your-username/Etrrna-Labs-test.git
 cd etrnal-labs-test
 
 # Install dependencies
